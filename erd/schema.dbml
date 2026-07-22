@@ -1,0 +1,67 @@
+// Supply Chain & Inventory Optimization SQL Project — ERD
+// Paste this directly into dbdiagram.io's editor
+
+Table categories {
+  category_id   int [pk, increment]
+  category_name varchar(50)
+}
+
+Table suppliers {
+  supplier_id   int [pk, increment]
+  supplier_name varchar(50)
+  hq_location   varchar(50)
+}
+
+Table warehouses {
+  warehouse_id   int [pk, increment]
+  warehouse_name varchar(80)
+  city           varchar(50)
+}
+
+Table products {
+  sku                     varchar(10) [pk]
+  category_id             int [ref: > categories.category_id]
+  price                   decimal(10,2)
+  availability            int
+  annual_units_sold       int
+  revenue_generated       decimal(12,2)
+  customer_demographics   varchar(50)
+  starting_stock          int
+  order_lead_time         int
+  std_order_qty           int
+  shipping_times          int
+  shipping_carriers       varchar(50)
+  shipping_costs          decimal(10,2)
+  supplier_id             int [ref: > suppliers.supplier_id]
+  warehouse_id            int [ref: > warehouses.warehouse_id]
+  promised_lead_time      int
+  production_volumes      int
+  manufacturing_lead_time int
+  manufacturing_costs     decimal(10,2)
+  inspection_results      varchar(20)
+  defect_rate_pct         decimal(6,3)
+  transportation_modes    varchar(20)
+  routes                  varchar(20)
+  costs                   decimal(10,2)
+}
+
+Table purchase_orders {
+  po_id                    int [pk]
+  sku                      varchar(10) [ref: > products.sku]
+  supplier_id              int [ref: > suppliers.supplier_id]
+  order_date               date
+  promised_lead_time_days  int
+  actual_lead_time_days    int
+  received_date            date
+  qty_ordered              int
+}
+
+Table sales_orders {
+  so_id            int [pk]
+  sku              varchar(10) [ref: > products.sku]
+  week_start_date  date
+  qty_demanded     int
+  qty_fulfilled    int
+  stockout_flag    int
+  ending_stock     int
+}
