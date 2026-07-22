@@ -1,4 +1,4 @@
-/* ============================================================
+
    SUPPLY CHAIN & INVENTORY OPTIMIZATION SQL PROJECT
    Author : Poornima Singh
    Stack  : PostgreSQL
@@ -6,7 +6,7 @@
             categories / suppliers / warehouses / products, plus a
             synthetically generated 52-week purchase_orders and
             sales_orders history.
-   ============================================================
+   
    SECTIONS
     0. Schema (DDL)
     1. Data validation
@@ -19,12 +19,10 @@
     8. Monthly trend analysis
     9. Quality correlation analysis
    10. Synthesis: prioritized risk queries
-   ============================================================ */
 
 
-/* ============================================================
+
    0. SCHEMA (DDL)
-   ============================================================ */
 
 DROP TABLE IF EXISTS sales_orders;
 DROP TABLE IF EXISTS purchase_orders;
@@ -107,9 +105,9 @@ CREATE TABLE sales_orders (
 -- \copy sales_orders FROM 'sales_orders.csv' WITH (FORMAT csv, HEADER true);
 
 
-/* ============================================================
+
    1. DATA VALIDATION
-   ============================================================ */
+
 
 SELECT 'categories' AS table_name, COUNT(*) FROM categories
 UNION ALL SELECT 'suppliers', COUNT(*) FROM suppliers
@@ -136,9 +134,9 @@ SELECT * FROM purchase_orders WHERE received_date < order_date;
 SELECT * FROM sales_orders WHERE ending_stock < 0;
 
 
-/* ============================================================
+
    2. DESCRIPTIVE INVENTORY METRICS
-   ============================================================ */
+   
 
 -- 2.1 Current snapshot: stock, weekly demand rate, days-of-supply per SKU
 SELECT
@@ -163,9 +161,9 @@ GROUP BY c.category_name
 ORDER BY total_revenue DESC;
 
 
-/* ============================================================
+
    3. ABC CLASSIFICATION
-   ============================================================ */
+ 
 
 -- 3.1 Cumulative-% method (classic Pareto ABC)
 WITH revenue_ranked AS (
@@ -220,10 +218,9 @@ FROM products
 ORDER BY revenue_generated DESC;
 
 
-/* ============================================================
-   4. REORDER POINT & SAFETY STOCK
-   ============================================================ */
 
+   4. REORDER POINT & SAFETY STOCK
+   
 WITH demand_stats AS (
     SELECT sku,
         AVG(qty_demanded)     AS avg_weekly_demand,
@@ -252,9 +249,9 @@ JOIN leadtime_stats l ON d.sku = l.sku
 ORDER BY reorder_point DESC;
 
 
-/* ============================================================
+
    5. STOCKOUT ANALYSIS
-   ============================================================ */
+
 
 -- 5.1 Stockout frequency and lost units per SKU
 SELECT
@@ -301,9 +298,9 @@ ORDER BY longest_stockout_streak_weeks DESC
 LIMIT 15;
 
 
-/* ============================================================
+
    6. SUPPLIER LEAD-TIME RELIABILITY
-   ============================================================ */
+    
 
 -- 6.1 Actual vs promised lead time, variance, late-delivery rate by supplier
 SELECT
