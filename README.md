@@ -32,13 +32,17 @@ sales_orders    (so_id PK, sku FK, week_start_date, qty_demanded, qty_fulfilled,
 PostgreSQL · window functions (`SUM() OVER`, `RANK()`, `LAG()`, `NTILE()`) · CTEs · gaps-and-islands technique · `FILTER` clauses · `DATE_TRUNC` time-series rollups
 
 ## Key Findings
-- **Overall stockout rate: 6.2%** of SKU-weeks saw demand exceed available stock.
-- **Estimated revenue lost to stockouts (top 15 affected SKUs): ~$130K+**.
-- **Supplier reliability varies meaningfully**: lead-time standard deviation ranges from **7.0 days** (most consistent suppliers) to **9.4 days** (least consistent) — a ~35% reliability gap that matters more for planning buffers than average lead time alone.
-- **Stockout risk is not evenly distributed geographically**: the Delhi and Mumbai fulfillment centers run stockout rates of **9.0–9.1%**, more than 3x the Kolkata center's **2.6%** — a concrete, actionable finding for where to prioritize inventory investment.
-- **Stockout rate trended down from a 9.0% peak in month 1 to under 3% by month 2**, then drifted back up to ~7-8% through the winter months before improving again — visible only because of the time-series extension, not something the original flat dataset could show.
-- **Defect rate does not meaningfully correlate with stockout rate** in this data (quartile analysis shows no consistent upward trend) — a legitimate negative finding: it rules out product quality as a driver of stockouts here, pointing attention back to demand volatility and supplier lead time instead.
-- The synthesis query flags a short list of **A-tier (top-revenue) SKUs as HIGH or MODERATE RISK**, combining stockout rate and supplier unreliability into one prioritized action list instead of 100 SKUs to sift through manually.
+Overall stockout rate came out to 6.2% of SKU-weeks — meaning demand outpaced available stock about 1 out of every 16 weeks across the catalog. For the 15 worst-affected SKUs alone, that translates to roughly $130K in lost revenue, which is the kind of number that's easy to miss if you're only looking at current stock levels rather than the order history.
+
+Supplier reliability turned out to be a bigger factor than I expected. Lead-time standard deviation across the 5 suppliers ranges from about 7 days on the more consistent end up to 9.4 days for the least predictable one — so two suppliers with similar average lead times can require very different safety stock buffers depending on how erratic they actually are.
+
+The warehouse-level breakdown was the most useful cut for me: Delhi and Mumbai are running stockout rates around 9%, while Kolkata sits under 3%. That's a clearer signal for where to focus than any single SKU-level number, since it points at operational/fulfillment issues rather than just demand forecasting.
+
+Stockout rate also isn't flat over the year — it spiked early on, dropped, then climbed back up through the later months before easing off again. That pattern only shows up because of the added time dimension; the original flat dataset had no way to show it.
+
+One thing that didn't pan out: I expected defect rate to correlate with stockouts (bad batches → more return/rework → less available stock), but breaking SKUs into defect-rate quartiles showed no consistent relationship. Worth noting as a negative result — it points more toward demand volatility and supplier timing as the real drivers here, not product quality.
+
+Combining ABC tier, stockout rate, and supplier variance into one query flags a short list of top-revenue SKUs that need attention first, instead of leaving it as 100 separate numbers to sort through manually.
 
 ## How to Run
 1. Run the DDL in `sql/supply_chain_analysis.sql` (Section 0) to create all 6 tables.
@@ -71,4 +75,4 @@ README.md
 ```
 
 ## Notes on Methodology
-The relational normalization and order-history extension are clearly synthetic and documented as such — generated to preserve every real attribute in the base dataset while adding the structural and temporal depth (foreign keys, order history) needed to answer real supply-chain questions. This is a standard, defensible technique when a public dataset is flat or lacks the time dimension a business question requires.
+The original Kaggle dataset is a single flat snapshot — no order history, no time dimension — so questions like "how often do we stock out" or "is a supplier getting worse" couldn't be answered with it directly. I normalized it into separate `categories`/`suppliers`/`warehouses`/`products` tables and generated a 52-week purchase and sales history on top of it, keeping every real attribute from the original data (price, lead time, stock levels, order quantities) as the basis for the simulation rather than inventing numbers unrelated to it. This is a reasonable approach when a public dataset covers the right entities but is missing the time-series depth a specific analysis needs.
